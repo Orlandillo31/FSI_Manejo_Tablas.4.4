@@ -7,24 +7,31 @@ import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 public class FTelemusica extends javax.swing.JFrame {
 
     Conexion2 cnx = new Conexion2();
 
+    String canciones = "SELECT * FROM canciones ORDER BY titulo";
+    String versiones = "SELECT * FROM versiones WHERE canciones_idcanciones = '%s'";
+    String interpretaciones = "SELECT idversiones,nombrea,rol FROM rolas WHERE versiones_idversiones = '%s'";
+    String tablaActiva = "canciones";
+
     public FTelemusica() {
         initComponents();
 
         ajustesUI();
 
-//        if (cnx.conectar("localhost", "telemusica", "root", "") == 1) {
-//
-//            JOptionPane.showMessageDialog(this, "Conectado");
-//        } else {
-//            JOptionPane.showMessageDialog(this, "Sin acceso a la BD");
-//            //           System.exit(0);
-//        }
+        if (cnx.conectar("localhost", "telemusica", "root", "") == 1) {
+            cnx.entablar(canciones, TCanciones, 20, 40, 40);
+            cascada();
+            cnx.seleccionar("SELECT nombrea FROM artistas ORDER BY nombrea", CBArtista);
+        } else {
+            JOptionPane.showMessageDialog(this, "Sin acceso a la BD");
+            System.exit(0);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -110,6 +117,11 @@ public class FTelemusica extends javax.swing.JFrame {
 
         BNuevo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/new2.png"))); // NOI18N
         BNuevo.setToolTipText("Nuevo registro");
+        BNuevo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BNuevoActionPerformed(evt);
+            }
+        });
         jPanel2.add(BNuevo);
 
         BRegistrar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/add1.png"))); // NOI18N
@@ -123,10 +135,20 @@ public class FTelemusica extends javax.swing.JFrame {
 
         BEditar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/edit2.png"))); // NOI18N
         BEditar.setToolTipText("Editar");
+        BEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BEditarActionPerformed(evt);
+            }
+        });
         jPanel2.add(BEditar);
 
         BBorrar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/delete1.png"))); // NOI18N
         BBorrar.setToolTipText("Remover");
+        BBorrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BBorrarActionPerformed(evt);
+            }
+        });
         jPanel2.add(BBorrar);
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "BUSQUEDAS", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.BOTTOM));
@@ -201,6 +223,11 @@ public class FTelemusica extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        TCanciones.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                TCancionesMousePressed(evt);
+            }
+        });
         jScrollPane1.setViewportView(TCanciones);
 
         jLabel13.setBackground(new java.awt.Color(30, 41, 59));
@@ -274,11 +301,21 @@ public class FTelemusica extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        TVersiones.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                TVersionesMousePressed(evt);
+            }
+        });
         jScrollPane2.setViewportView(TVersiones);
 
         BAgregarVersion.setBackground(new java.awt.Color(25, 118, 210));
         BAgregarVersion.setForeground(new java.awt.Color(255, 255, 255));
         BAgregarVersion.setText("Agregar versión");
+        BAgregarVersion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BAgregarVersionActionPerformed(evt);
+            }
+        });
 
         jLabel11.setBackground(new java.awt.Color(30, 41, 59));
         jLabel11.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
@@ -341,6 +378,11 @@ public class FTelemusica extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        TInterpretes.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                TInterpretesMousePressed(evt);
+            }
+        });
         jScrollPane3.setViewportView(TInterpretes);
 
         jLabel6.setForeground(new java.awt.Color(100, 116, 139));
@@ -356,6 +398,11 @@ public class FTelemusica extends javax.swing.JFrame {
         BAgregarInterprete.setBackground(new java.awt.Color(25, 118, 210));
         BAgregarInterprete.setForeground(new java.awt.Color(255, 255, 255));
         BAgregarInterprete.setText("Agregar intérprete");
+        BAgregarInterprete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BAgregarInterpreteActionPerformed(evt);
+            }
+        });
 
         jLabel12.setBackground(new java.awt.Color(30, 41, 59));
         jLabel12.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
@@ -450,11 +497,235 @@ public class FTelemusica extends javax.swing.JFrame {
 
         if (Integer.parseInt(res[0].toString()) == 1) {
             //recargar la tabla de canciones
+            cnx.entablar(canciones, TCanciones, 20, 40, 40);
         }
 
         JOptionPane.showMessageDialog(this, res[1]);
-        
+
     }//GEN-LAST:event_BRegistrarActionPerformed
+
+    private void TCancionesMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TCancionesMousePressed
+        DefaultTableModel modelo = (DefaultTableModel) TCanciones.getModel();
+        int ren = TCanciones.getSelectedRow();
+        if (ren >= 0) {
+            String id = modelo.getValueAt(ren, 0).toString();
+            String sql = String.format(versiones, id);
+            cnx.entablar(sql, TVersiones);
+            cnx.entablar(String.format(interpretaciones, ""), TInterpretes);
+
+            TID.setText(id);
+            TTitulo.setText(modelo.getValueAt(ren, 1).toString());
+            TAutor.setText(modelo.getValueAt(ren, 2).toString());
+            tablaActiva = "canciones";
+        }
+    }//GEN-LAST:event_TCancionesMousePressed
+
+    private void TVersionesMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TVersionesMousePressed
+        DefaultTableModel modelo = (DefaultTableModel) TVersiones.getModel();
+        int ren = TVersiones.getSelectedRow();
+        if (ren >= 0) {
+            String id = modelo.getValueAt(ren, 0).toString();
+            String sql = String.format(interpretaciones, id);
+            cnx.entablar(sql, TInterpretes);
+
+            TGenero.setText(modelo.getValueAt(ren, 1).toString());
+            SDuracion.setValue(Integer.parseInt(modelo.getValueAt(ren, 2).toString()));
+            tablaActiva = "versiones";
+        }
+    }//GEN-LAST:event_TVersionesMousePressed
+
+    private void BNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BNuevoActionPerformed
+        TID.setText("");
+        TTitulo.setText("");
+        TAutor.setText("");
+        TGenero.setText("");
+        SDuracion.setValue(60);
+        TCanciones.clearSelection();
+        tablaActiva = "canciones";
+        TID.requestFocus();
+    }//GEN-LAST:event_BNuevoActionPerformed
+
+    private void BEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BEditarActionPerformed
+        DefaultTableModel modeloV = (DefaultTableModel) TVersiones.getModel();
+        DefaultTableModel modeloI = (DefaultTableModel) TInterpretes.getModel();
+        int renC = TCanciones.getSelectedRow();
+        int renV = TVersiones.getSelectedRow();
+        int renI = TInterpretes.getSelectedRow();
+        Object[] res;
+
+        if (tablaActiva.equals("versiones") && renV >= 0) {
+            String idV = modeloV.getValueAt(renV, 0).toString();
+            String idC = modeloV.getValueAt(renV, 3).toString();
+            res = cnx.ejecutarCRUD(
+                    "gestionar_version",
+                    new Object[]{
+                        "U",
+                        idV,
+                        TGenero.getText(),
+                        SDuracion.getValue(),
+                        idC
+                    }
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de versiones
+                cnx.entablar(String.format(versiones, idC), TVersiones);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else if (tablaActiva.equals("interpretaciones") && renI >= 0) {
+            String idV = modeloI.getValueAt(renI, 0).toString();
+            String idA = cnx.buscarDato("artistas", "idartistas", "nombrea", modeloI.getValueAt(renI, 1).toString());
+            res = cnx.ejecutarCRUD(
+                    "gestionar_interpretacion",
+                    new Object[]{
+                        "U",
+                        idV,
+                        idA,
+                        CBRol.getSelectedItem().toString().toLowerCase()
+                    }
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de interpretaciones
+                cnx.entablar(String.format(interpretaciones, idV), TInterpretes);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else if (tablaActiva.equals("canciones") && renC >= 0) {
+            res = cnx.ejecutarCRUD(
+                    "gestionar_cancion",
+                    new Object[]{
+                        "U",
+                        TID.getText(),
+                        TTitulo.getText(),
+                        TAutor.getText()
+                    }
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de canciones
+                cnx.entablar(canciones, TCanciones, 20, 40, 40);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecciona el registro que deseas editar");
+        }
+    }//GEN-LAST:event_BEditarActionPerformed
+
+    private void BBorrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BBorrarActionPerformed
+        DefaultTableModel modeloV = (DefaultTableModel) TVersiones.getModel();
+        DefaultTableModel modeloI = (DefaultTableModel) TInterpretes.getModel();
+        int renC = TCanciones.getSelectedRow();
+        int renV = TVersiones.getSelectedRow();
+        int renI = TInterpretes.getSelectedRow();
+        Object[] res;
+
+        if (tablaActiva.equals("versiones") && renV >= 0) {
+            String idV = modeloV.getValueAt(renV, 0).toString();
+            String idC = modeloV.getValueAt(renV, 3).toString();
+            res = cnx.ejecutarCRUD(
+                    "gestionar_version",
+                    new Object[]{"D", idV, null, null, null}
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de versiones
+                cnx.entablar(String.format(versiones, idC), TVersiones);
+                cnx.entablar(String.format(interpretaciones, ""), TInterpretes);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else if (tablaActiva.equals("interpretaciones") && renI >= 0) {
+            String idV = modeloI.getValueAt(renI, 0).toString();
+            String idA = cnx.buscarDato("artistas", "idartistas", "nombrea", modeloI.getValueAt(renI, 1).toString());
+            res = cnx.ejecutarCRUD(
+                    "gestionar_interpretacion",
+                    new Object[]{"D", idV, idA, null}
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de interpretaciones
+                cnx.entablar(String.format(interpretaciones, idV), TInterpretes);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else if (tablaActiva.equals("canciones") && renC >= 0) {
+            res = cnx.ejecutarCRUD(
+                    "gestionar_cancion",
+                    new Object[]{"D", TID.getText(), null, null}
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de canciones
+                cnx.entablar(canciones, TCanciones, 20, 40, 40);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecciona el registro que deseas borrar");
+        }
+    }//GEN-LAST:event_BBorrarActionPerformed
+
+    private void BAgregarVersionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BAgregarVersionActionPerformed
+        DefaultTableModel modelo = (DefaultTableModel) TCanciones.getModel();
+        int ren = TCanciones.getSelectedRow();
+        if (ren >= 0) {
+            String id = modelo.getValueAt(ren, 0).toString();
+            Object[] res = cnx.ejecutarCRUD(
+                    "gestionar_version",
+                    new Object[]{
+                        "I",
+                        null,
+                        TGenero.getText(),
+                        SDuracion.getValue(),
+                        id
+                    }
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de versiones
+                cnx.entablar(String.format(versiones, id), TVersiones);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecciona una canción");
+        }
+    }//GEN-LAST:event_BAgregarVersionActionPerformed
+
+    private void BAgregarInterpreteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BAgregarInterpreteActionPerformed
+        DefaultTableModel modelo = (DefaultTableModel) TVersiones.getModel();
+        int ren = TVersiones.getSelectedRow();
+        if (ren >= 0) {
+            String id = modelo.getValueAt(ren, 0).toString();
+            String idA = cnx.buscarDato("artistas", "idartistas", "nombrea", CBArtista.getSelectedItem().toString());
+            Object[] res = cnx.ejecutarCRUD(
+                    "gestionar_interpretacion",
+                    new Object[]{
+                        "I",
+                        id,
+                        idA,
+                        CBRol.getSelectedItem().toString().toLowerCase()
+                    }
+            );
+            if (Integer.parseInt(res[0].toString()) == 1) {
+                //recargar la tabla de interpretaciones
+                cnx.entablar(String.format(interpretaciones, id), TInterpretes);
+            }
+            JOptionPane.showMessageDialog(this, res[1]);
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecciona una versión");
+        }
+    }//GEN-LAST:event_BAgregarInterpreteActionPerformed
+
+    private void TInterpretesMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TInterpretesMousePressed
+        DefaultTableModel modelo = (DefaultTableModel) TInterpretes.getModel();
+        int ren = TInterpretes.getSelectedRow();
+        if (ren >= 0) {
+            CBArtista.setSelectedItem(modelo.getValueAt(ren, 1).toString());
+            String rol = modelo.getValueAt(ren, 2).toString();
+            for (int i = 0; i < CBRol.getItemCount(); i++) {
+                if (CBRol.getItemAt(i).equalsIgnoreCase(rol)) {
+                    CBRol.setSelectedIndex(i);
+                }
+            }
+            tablaActiva = "interpretaciones";
+        }
+    }//GEN-LAST:event_TInterpretesMousePressed
 
     public static void main(String args[]) {
         try {
@@ -566,6 +837,31 @@ public class FTelemusica extends javax.swing.JFrame {
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/imagenes/guitarra.png")).getImage());
 
         setLocationRelativeTo(this);
+    }
+
+    public void cascada() {
+        DefaultTableModel modeloC = (DefaultTableModel) TCanciones.getModel();
+        DefaultTableModel modeloV = (DefaultTableModel) TVersiones.getModel();
+
+        cnx.entablar(canciones, TCanciones);
+        TCanciones.setRowSelectionInterval(0, 0);
+        int ren = TCanciones.getSelectedRow();
+        if (ren >= 0) {
+            String id = modeloC.getValueAt(ren, 0).toString();
+            String sql = String.format(versiones, id);
+            cnx.entablar(sql, TVersiones);
+        }
+        
+        TVersiones.setRowSelectionInterval(0, 0);
+        int renV = TVersiones.getSelectedRow();
+
+        if (renV >= 0) {
+            String idV = modeloV.getValueAt(renV, 0).toString();
+            String sqlV = String.format(interpretaciones, idV);
+
+            cnx.entablar(sqlV, TInterpretes);
+        }
+
     }
 
 }
